@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Media Recorder Polyfill</title>
+        <link rel="shortcut icon" href="./favicon.ico">
+        <meta content="width=device-width" name="viewport">
+        <meta name="theme-color" content="#00e5d2">
+        <script>
+            window.MediaRecorder && !/^\?polyfill/.test(location.search) || document.write(decodeURI('%3Cscript src="./polyfill.js">%3C/script>'));
+        </script>
+        <style>
+            * {
+                padding: 0;
+                margin: 0
+            }
+
+            a {
+                color: #009387
+            }
+
+            a:visited {
+                color: #930087
+            }
+
+            body {
+                margin: 1rem;
+                font-family: sans-serif
+            }
+
+            main {
+                max-width: 28rem;
+                margin: 0 auto;
+                position: relative
+            }
+
+            #controls {
+                display: flex;
+                margin-top: 2rem
+            }
+
+            button {
+                flex-grow: 1;
+                height: 2.5rem;
+                min-width: 2rem;
+                border: none;
+                border-radius: .15rem;
+                background: #00e5d2;
+                margin-left: 2px;
+                box-shadow: inset 0 -.15rem 0 rgba(0,0,0,.2);
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center
+            }
+
+            button:focus,button:hover {
+                outline: none;
+                background: #00ffe9
+            }
+
+            button::-moz-focus-inner {
+                border: 0
+            }
+
+            button:active {
+                box-shadow: inset 0 1px 0 rgba(0,0,0,.2);
+                line-height: 3rem
+            }
+
+            button:disabled {
+                pointer-events: none;
+                background: #d3d3d3
+            }
+
+            button:first-child {
+                margin-left: 0
+            }
+
+            button svg {
+                transform: translateY(-.05rem);
+                fill: #000;
+                width: 1.4rem
+            }
+
+            button:active svg {
+                transform: translateY(0)
+            }
+
+            button:disabled svg {
+                fill: #9a9a9a
+            }
+
+            button text {
+                fill: #00e5d2
+            }
+
+            button:focus text,button:hover text {
+                fill: #00ffe9
+            }
+
+            button:disabled text {
+                fill: #d3d3d3
+            }
+
+            #formats,#mode {
+                margin-top: .5rem;
+                font-size: 80%
+            }
+
+            #mode {
+                float: right
+            }
+
+            #support {
+                display: none;
+                margin-top: 2rem;
+                color: red;
+                font-weight: 700
+            }
+
+            #list {
+                margin-top: 1.6rem
+            }
+
+            audio {
+                display: block;
+                width: 100%;
+                margin-top: .2rem
+            }
+
+            li {
+                list-style: none;
+                margin-bottom: 1rem
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <p>
+                <a href="https://github.com/ai/audio-recorder-polyfill">Audio Recorder Polyfill</a>
+                is a MediaRecorder polyfill to &nbsp;record audio in Edge and Safari. See <a href="https://ai.github.io/audio-recorder-polyfill/api">API</a>
+                .
+            </p>
+            <div id="controls">
+                <button id="record" disabled="" autocomplete="off" title="Record">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="46"></circle>
+                    </svg>
+                </button>
+                <button id="sec" disabled="" autocomplete="off" title="Record by 1 second">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="46"></circle>
+                        <text x="26" y="64" font-size="45">1s</text>
+                    </svg>
+                </button>
+                <button id="pause" disabled="" autocomplete="off" title="Pause">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="14" y="10" width="25" height="80"></rect>
+                        <rect x="62" y="10" width="25" height="80"></rect>
+                    </svg>
+                </button>
+                <button id="resume" disabled="" autocomplete="off" title="Resume">
+                    <svg viewBox="0 0 100 100">
+                        <polygon points="10,10 90,50 10,90"></polygon>
+                    </svg>
+                </button>
+                <button id="stop" autocomplete="off" disabled="" title="Stop">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="12" y="12" width="76" height="76"></rect>
+                    </svg>
+                </button>
+                <button id="request" autocomplete="off" disabled="" title="Request data">
+                    <svg viewBox="0 0 100 100">
+                        <polygon points="10,10 90,10 50,90"></polygon>
+                    </svg>
+                </button>
+            </div>
+            <div id="mode">
+                Native support, <a href="?polyfill">force polyfill</a>
+            </div>
+            <div id="formats"></div>
+            <div id="support">Your browser doesn’t support MediaRecorder or WebRTC to be able to polyfill MediaRecorder.</div>
+            <ul id="list"></ul>
+        </main>
+        <script>
+            let EVENTS = ['start', 'stop', 'pause', 'resume']
+let TYPES = ['audio/webm', 'audio/ogg', 'audio/wav']
+
+let recorder, list, recordFull, recordParts, pause, resume, stop, request
+
+const KB = 1 << 10
+const MB = 1 << 20
+
+function bytes (value) {
+  let mag = Math.abs(value)
+
+  let unit
+  if (mag >= MB) {
+    unit = 'MB'
+    value = value / MB
+  } else if (mag >= KB) {
+    unit = 'KB'
+    value = value / KB
+  } else {
+    unit = 'B'
+  }
+
+  return value.toFixed(0).replace(/(?:\.0*|(\.[^0]+)0+)$/, '$1') + ' ' + unit
+}
+
+function startRecording (type) {
+  list.innerHTML = ''
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    recorder = new MediaRecorder(stream)
+
+    EVENTS.forEach(name => {
+      recorder.addEventListener(name, changeState.bind(null, name))
+    })
+    recorder.addEventListener('dataavailable', saveRecord)
+
+    if (type === 'full') {
+      recorder.start()
+    } else {
+      recorder.start(1000)
+    }
+  })
+  recordParts.blur()
+  recordFull.blur()
+}
+
+function stopRecording () {
+  recorder.stop()
+  recorder.stream.getTracks()[0].stop()
+  stop.blur()
+}
+
+function pauseRecording () {
+  recorder.pause()
+  pause.blur()
+}
+
+function resumeRecording () {
+  recorder.resume()
+  resume.blur()
+}
+
+function requestData () {
+  recorder.requestData()
+  request.blur()
+}
+
+function saveRecord (e) {
+  let li = document.createElement('li')
+
+  let strong = document.createElement('strong')
+  strong.innerText = 'dataavailable: '
+  li.appendChild(strong)
+
+  let s = document.createElement('span')
+  s.innerText = e.data.type + ', ' + bytes(e.data.size)
+  li.appendChild(s)
+
+  let audio = document.createElement('audio')
+  audio.controls = true
+  audio.src = URL.createObjectURL(e.data)
+  li.appendChild(audio)
+
+  list.appendChild(li)
+}
+
+function changeState (eventName) {
+  let li = document.createElement('li')
+  li.innerHTML = '<strong>' + eventName + ': </strong>' + recorder.state
+  if (eventName === 'start') {
+    li.innerHTML += ', ' + recorder.mimeType
+  }
+  list.appendChild(li)
+
+  if (recorder.state === 'recording') {
+    recordParts.disabled = true
+    recordFull.disabled = true
+    request.disabled = false
+    resume.disabled = true
+    pause.disabled = false
+    stop.disabled = false
+  } else if (recorder.state === 'paused') {
+    recordParts.disabled = true
+    recordFull.disabled = true
+    request.disabled = false
+    resume.disabled = false
+    pause.disabled = true
+    stop.disabled = false
+  } else if (recorder.state === 'inactive') {
+    recordParts.disabled = false
+    recordFull.disabled = false
+    request.disabled = true
+    resume.disabled = true
+    pause.disabled = true
+    stop.disabled = true
+  }
+}
+
+list = document.getElementById('list')
+
+recordParts = document.getElementById('sec')
+recordFull = document.getElementById('record')
+request = document.getElementById('request')
+resume = document.getElementById('resume')
+pause = document.getElementById('pause')
+stop = document.getElementById('stop')
+
+if (MediaRecorder.notSupported) {
+  list.style.display = 'none'
+  document.getElementById('controls').style.display = 'none'
+  document.getElementById('formats').style.display = 'none'
+  document.getElementById('mode').style.display = 'none'
+  document.getElementById('support').style.display = 'block'
+} else {
+  document.getElementById('formats').innerText =
+    'Format: ' +
+    TYPES.filter(i => {
+      return MediaRecorder.isTypeSupported(i)
+    }).join(', ')
+
+  recordParts.addEventListener('click', startRecording.bind(null, 'parts'))
+  recordFull.addEventListener('click', startRecording.bind(null, 'full'))
+  request.addEventListener('click', requestData)
+  resume.addEventListener('click', resumeRecording)
+  pause.addEventListener('click', pauseRecording)
+  stop.addEventListener('click', stopRecording)
+
+  recordParts.disabled = false
+  recordFull.disabled = false
+}
+        </script>
+    </body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Record JS</title>
+    <link
+      rel="stylesheet"
+      href="js/bootstrap-4.5.3-dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.15.1/css/all.css"
+      integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp"
+      crossorigin="anonymous"
+    />
+
+    <style type="text/css">
+      .btn {
+        margin-top: 20px;
+      }
+      div.countdown-bar {
+        width: 0;
+        height: 20px;
+        margin-bottom: 20px;
+        border: 1px solid rgb(233, 8, 8);
+        background-color: rgba(189, 184, 184, 0.788);
+      }
+      /* Loader */
+      div.countdown-bar div:nth-of-type(1) {
+        width: 0;
+        height: 100%;
+      }
+      /* Timer */
+      div.countdown-bar div:nth-of-type(2) {
+        width: 100%;
+        height: 100%;
+      }
+      .bg {
+        background-color: #36426a;
+      }
+      .tw {
+        color: #fff;
+      }
+      .torange {
+        color: #E67300;
+      }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/bootstrap-4.5.3-dist/js/bootstrap.min.js"></script>
+    <script src="js/visual-countdown-timer/js/script.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm bg tw">
+          <h1>Extra Practice</h1>
+          <hr />
+          <p>Read and answer the following questions within 5 minutes.</p>
+        </div>
+      </div>
+      <div style="height: 10px"></div>
+      <div class="card">
+        <div class="card-body">
+          <p>
+            "Introduce your name. Describe your home town? Is it a good place to
+            live?
+          </p>
+          <p>
+            (Why? / Why not?) Describe an interesting place in your home town
+            that you would like to invite tourists to visit this place. (Give
+            reasons to support your answers)"
+          </p>
+        </div>
+      </div>
+      <div style="height: 5px"></div>
+      <div class="card">
+        <div class="card-body text-center">
+          <div>
+            <img src="images/icon_speaking3.png" id="mic" />
+            <img src="images/icon_speaking4.png" id="speaker" />
+          </div>
+          <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-10">
+              <div class="audio" id="audio"></div>
+              <div class="countdown-bar" id="countdownC">
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+            <div class="col-sm-2"></div>
+          </div>
+          <div
+            class="btn btn-warning tw"
+            id="playrec"
+            style="background-color: #e67300"
+          >
+            <i class="fas fa-microphone-alt" style="margin-right: 10px"></i>
+            Record
+          </div>
+          <div class="btn btn-outline-warning" id="stop">
+            <i class="fas fa-stop" style="margin-right: 10px"></i>
+            Stop
+          </div>
+          <div class="btn btn-outline-warning" id="rerecord">
+            <i class="fas fa-redo-alt" style="margin-right: 10px"></i>
+            Rerecord
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm text-center">
+          <button
+            data-toggle="modal"
+            data-target="#finish-modal"
+            class="btn btn-success btn-md"
+          >
+            Finish
+          </button>
+        </div>
+      </div>
+      <div style="height: 40px"></div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="finish-modal"
+      tabindex="-1"
+      aria-labelledby="finish-modal"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <img src="images/icon_speaking5.png" />
+            <h2 class="text-center torange">What is your score?</h2>
+            <p class="text-center">
+              Unfortunately, this function is unavailable at the moment. We are
+              working on our TU-GET CBT mentoring service and will be launching
+              it soon. Please stay tuned!
+            </p>
+            <a href="answer.html" class="btn tw"
+            style="background-color: #e67300">
+              Next
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $("#rerecord").hide();
+        $("#countdownC").hide();
+        $("#speaker").hide();
+        $("#stop").hide();
+      });
+      $("#playrec").click(function () {
+        $("#countdownC").show();
+        $("#stop").show();
+        $("#playrec").hide();
+        countdown("countdownC", 0, 0, 5, 2);
+        $config.endtime_message = "Timer expired!";
+
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then(function (stream) {
+            console.log("You let me use your mic!");
+          })
+          .catch(function (err) {
+            console.log("No mic for you!");
+          });
+
+        var device = navigator.mediaDevices.getUserMedia({ audio: true });
+        var items = [];
+        device.then((stream) => {
+          var recorder = new MediaRecorder(stream);
+          recorder.ondataavailable = (e) => {
+            items.push(e.data);
+            if (recorder.state == "inactive") {
+              var blob = new Blob(items, { type: "audio/webm" });
+              var audio = document.getElementById("audio");
+              var mainaudio = document.createElement("audio");
+              mainaudio.setAttribute("controls", "controls");
+              audio.appendChild(mainaudio);
+              mainaudio.innerHTML =
+                '<source src="' +
+                URL.createObjectURL(blob) +
+                '"type="video/webm" />';
+            }
+          };
+          recorder.start(100);
+          setTimeout(() => {
+            recorder.stop();
+          }, 1500000);
+          $("#stop").click(function () {
+            recorder.stop();
+            $("#countdownC").hide();
+            $("#stop").hide();
+            $("#mic").hide();
+            $("#speaker").show();
+            $("#rerecord").show();
+          });
+        });
+      });
+      $("#rerecord").click(function () {
+        location.reload();
+      });
+    </script>
+  </body>
+</html>
