@@ -23,29 +23,9 @@ let isPlaying = true;
 
 const songList = [
     {
-        name: "Travel Love Beats",
-        source: "./assets/music/Travel Love Beats.mp3",
-        cover: "./assets/images/chillhop.jpg"
-    },
-    {
         name: "Night Sky Unreated",
-        source: "./assets/music/Night Sky.mp3",
-        cover: "./assets/images/chillhop-2.jpg"
-    },
-    {
-        name: "Be a Music",
-        source: "./assets/music/Be a Music.mp3",
-        cover: "./assets/images/chillhop-3.jpg"
-    },
-    {
-        name: "Slow Day",
-        source: "./assets/music/Slow Day.mp3",
-        cover: "./assets/images/chillhop-4.jpg"
-    },
-    {
-        name: "Carti Mangolia",
-        source: "./assets/music/Carti mangolia.mp3",
-        cover: "./assets/images/chillhop-2.jpg"
+        source: "../v2/Listening/ListeningStrategy1.mp3",
+        cover: "https://fbcoverstreet.com/thumbnail/y9cqyZf7fyQDucRwTOVikK9AJ6fnX9HbNAD5tfgYJ6sOiKRub3C5xejo9cg341jg.webp"
     }
 ];
 // helper function
