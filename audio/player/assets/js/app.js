@@ -24,7 +24,7 @@ let isPlaying = true;
 const songList = [
     {
         name: "Listening Strategy 1",
-        source: "https://203.131.210.183/tuapi/audio/v2/Listening/ListeningStrategy1.mp3",
+        source: "../../../v2/Listening/ListeningStrategy1.mp3",
         cover: "./assets/images/vector.jpeg"
     }
 ];
