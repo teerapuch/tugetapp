@@ -24,7 +24,8 @@ let isPlaying = true;
 const songList = [
     {
         name: "Night Sky Unreated",
-        source: "../v2/Listening/ListeningStrategy1.mp3",
+        //source: "../v2/Listening/ListeningStrategy1.mp3",
+        source: "https://github.com/teerapuch/tugetapp/blob/main/audio/v2/Listening/ListeningStrategy1.mp3",
         cover: "https://fbcoverstreet.com/thumbnail/y9cqyZf7fyQDucRwTOVikK9AJ6fnX9HbNAD5tfgYJ6sOiKRub3C5xejo9cg341jg.webp"
     }
 ];
