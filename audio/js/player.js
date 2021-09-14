@@ -96,7 +96,7 @@ function backPlay() {
 }
 function playHandler() {
     isPlaying = !isPlaying;
-    //console.log("Change: ",isPlaying)
+    console.log("Change: ",isPlaying)
     isPlaying ? pauseSong() : playSong();
 }
 
