@@ -7,12 +7,16 @@
   <title>Listening</title>
 </head>
 <body>
-  <audio controls autoplay>
+  <audio id="player" controls>
     <source 
     type="audio/mpeg"
     src="v2/Listening/ListeningStrategy1.mp3" 
     >
   Your browser does not support the audio element.
   </audio>
+  <script src="https://cdn.plyr.io/3.6.8/plyr.js"></script>
+  <script>
+    const player = new Plyr('#player');
+  </script>
 </body>
 </html>
